@@ -10,13 +10,29 @@ html {
     /* VARIABLES */
     --primary-color: #f7f7f7;
     --secondary-color: #2e2e2e;
-    --accent-color: #1f76c7;
+    --accent-color: #104e0a;
 
     background-color: var(--primary-color);
     font-family: "Poppins", sans-serif;
     font-size: 16px;
     color: var(--secondary-color);
     scroll-behavior: smooth;
+}
+
+.dark {
+  background-color: var(--accent-color);
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.square {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 #main {
@@ -69,6 +85,11 @@ html {
   height: 100%;
   min-height: var(--board-min);
   max-height: var(--board-max);
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 #footer {

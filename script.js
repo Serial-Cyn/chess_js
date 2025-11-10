@@ -10,18 +10,40 @@ let boardSetup = [
   ["R", "N", "B", "Q", "K", "B", "N", "R"],
 ];
 
+let isWhiteTurn = true;
+
+function getPieceAt(row, col) {
+  selectedPiece = { row, col };
+  highlightSquare(row, col);
+}
+
 function handleClickSquare(row, col) {
   const piece = boardSetup[row][col];
 
   if (!selectedPiece) {
     if (piece === "") return; // No piece to select
-    selectedPiece = { row, col };
-    highlightSquare(row, col);
+
+    // Validate selection
+    if (isWhiteTurn && piece === piece.toUpperCase()) {
+      getPieceAt(row, col);
+    } else if (!isWhiteTurn && piece === piece.toLowerCase()) {
+      getPieceAt(row, col);
+    } else {
+      console.log("Not your turn yet bro!");
+
+      return; // Invalid piece selection
+    }
   } else {
     // Move piece
     const from = selectedPiece;
-    boardSetup[row][col] = boardSetup[from.row][from.col];
+    const movingPiece = boardSetup[from.row][from.col];
+
+    boardSetup[row][col] = movingPiece;
     boardSetup[from.row][from.col] = "";
+
+    isWhiteTurn = !isWhiteTurn;
+    console.log(isWhiteTurn ? "White's turn" : "Black's turn");
+
     selectedPiece = null;
     createBoard();
   }

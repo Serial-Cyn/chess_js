@@ -1,4 +1,3 @@
-let selectedPiece = null;
 let boardSetup = [
   ["r", "n", "b", "q", "k", "b", "n", "r"],
   ["p", "p", "p", "p", "p", "p", "p", "p"],
@@ -11,6 +10,66 @@ let boardSetup = [
 ];
 
 let isWhiteTurn = true;
+let selectedPiece = null;
+
+// HELPER FUNCTIONS
+const isEmpty = (row, column) => boardSetup[row][column] === "";
+const isPawn = (piece) => piece.toLowerCase() === "p";
+const isSameColor = (piece1, piece2) => {
+    // Both pieces must be non-empty
+    if (piece1 === "" || piece2 === "") return false;
+
+    return (isUpper(piece1) && isUpper(piece2)) || (isLower(piece1) && isLower(piece2));
+}
+const isUpper = (char) => char === char.toUpperCase();
+const isLower = (char) => char === char.toLowerCase();
+const isWhite = (piece) => piece === piece.toUpperCase();
+
+function canPawnMove(fromRow, fromCol, toRow, toCol) {
+    const piece = boardSetup[fromRow][fromCol];
+
+    if (!isPawn(piece)) return false; // Not a pawn
+
+    const white = isWhite(piece);
+    const direction = white ? -1 : 1; // White moves up, Black moves down
+    const startRow = white ? 6 : 1;
+    const rowDiff = toRow - fromRow;
+    const colDiff = toCol - fromCol;
+
+    // Straight moves
+    if (colDiff === 0) {
+        // One square forward
+        if (rowDiff === direction) {
+            if (isEmpty(toRow, toCol)) return true;
+
+            return false; // Blocked
+        }
+
+        // Two squares forward from starting position
+        if (rowDiff === 2 * direction) {
+            if (fromRow === startRow && isEmpty(fromRow + direction, fromCol) && isEmpty(toRow, toCol)) {
+                return true;
+            }
+
+            return false; // Blocked or not at starting position
+        }
+
+        return false; // Invalid straight move
+    }
+
+    // Diagonal captures
+    if (Math.abs(colDiff) === 1 && rowDiff === direction) {
+        const target = boardSetup[toRow][toCol];
+        
+        if (target !== "" && !isSameColor(piece, target)) {
+            return true; // Valid capture
+        }
+
+        return false; // No piece to capture
+    }
+
+    return false; // Invalid move
+}
 
 function getPieceAt(row, col) {
   selectedPiece = { row, col };
@@ -38,12 +97,31 @@ function handleClickSquare(row, col) {
     const from = selectedPiece;
     const movingPiece = boardSetup[from.row][from.col];
 
+    if (from.row === row && from.col === col) {
+      selectedPiece = null;
+      createBoard();
+
+      return; // Deselect piece
+    }
+
+    // Validate move if pawn
+    if (isPawn(movingPiece)) {
+        // Try to move pawn
+        if (!canPawnMove(from.row, from.col, row, col)) {
+            console.log("Invalid pawn move");
+            return; // Invalid pawn move
+        }
+    }
+
+    // Perform move
     boardSetup[row][col] = movingPiece;
     boardSetup[from.row][from.col] = "";
 
+    // Switch turn
     isWhiteTurn = !isWhiteTurn;
     console.log(isWhiteTurn ? "White's turn" : "Black's turn");
 
+    // Reset selection
     selectedPiece = null;
     createBoard();
   }

@@ -21,10 +21,20 @@ html {
 
 .dark {
   background-color: var(--accent-color);
+  color: var(--primary-color);
+}
+
+.light {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
 }
 
 .pointer {
   cursor: pointer;
+}
+
+.selected {
+  border: 2px solid var(--secondary-color);
 }
 
 .square {

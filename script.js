@@ -15,6 +15,7 @@ let selectedPiece = null;
 // HELPER FUNCTIONS
 const isEmpty = (row, column) => boardSetup[row][column] === "";
 const isPawn = (piece) => piece.toLowerCase() === "p";
+const isRook = (piece) => piece.toLowerCase() === "r";
 const isSameColor = (piece1, piece2) => {
     // Both pieces must be non-empty
     if (piece1 === "" || piece2 === "") return false;
@@ -71,6 +72,54 @@ function canPawnMove(fromRow, fromCol, toRow, toCol) {
     return false; // Invalid move
 }
 
+function canRookMove(fromRow, fromCol, toRow, toCol) {
+  // Rook moves in straight lines: same row or same column
+  // Check if piece selected is a rook
+  const piece = boardSetup[fromRow][fromCol];
+
+  if (!isRook(piece)) return false;
+
+  // Check if moving in the same row or column
+  // If not, invalid move
+  // Check if path is clear
+  // If not, check if opponent piece at destination
+  // If same color piece at destination, invalid move
+  // Otherwise, valid move
+
+  if (fromRow !== toRow && fromCol !== toCol) {
+    return false; // Not moving in straight line
+  }
+
+  // Check if path is clear
+  // Horizontal movement
+  if (fromRow === toRow) {
+    const step = fromCol < toCol ? 1 : -1;
+    for (let col = fromCol + step; col !== toCol; col += step) {
+      if (!isEmpty(fromRow, col)) {
+        return false; // Path blocked
+      }
+    }
+  }
+
+  // Vertical movement
+  if (fromCol === toCol) {
+    const step = fromRow < toRow ? 1 : -1;
+    for (let row = fromRow + step; row !== toRow; row += step) {
+      if (!isEmpty(row, fromCol)) {
+        return false; // Path blocked
+      }
+    }
+  }
+
+  // Check destination square
+  const target = boardSetup[toRow][toCol];
+  if (target !== "" && isSameColor(piece, target)) {
+    return false; // Cannot capture own piece
+  }
+
+  return true; // Valid move
+}
+
 function getPieceAt(row, col) {
   selectedPiece = { row, col };
   highlightSquare(row, col);
@@ -110,6 +159,14 @@ function handleClickSquare(row, col) {
         if (!canPawnMove(from.row, from.col, row, col)) {
             console.log("Invalid pawn move");
             return; // Invalid pawn move
+        }
+    }
+
+    // Validate move if rook
+    if (isRook(movingPiece)) {
+        if (!canRookMove(from.row, from.col, row, col)) {
+            console.log("Invalid rook move");
+            return; // Invalid rook move
         }
     }
 

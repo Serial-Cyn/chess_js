@@ -11,6 +11,8 @@ let boardSetup = [
 
 let isWhiteTurn = true;
 let selectedPiece = null;
+let gameOver = false;
+let winner = null;
 
 // HELPER FUNCTIONS
 const isEmpty = (row, column) => boardSetup[row][column] === "";
@@ -231,6 +233,63 @@ function canKnightMove(fromRow, fromCol, toRow, toCol) {
   return false; // Invalid move
 }
 
+function isCheckmate(isWhite) {
+  // Iterate through all pieces of the given color
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const piece = boardSetup[row][col];
+
+      if (piece === "") continue; // Empty square
+
+      // Check only pieces of the specified color
+      if (isWhite && isUpper(piece) || !isWhite && isLower(piece)) {
+        // Try all possible moves for this piece
+        for (let toRow = 0; toRow < 8; toRow++) {
+          for (let toCol = 0; toCol < 8; toCol++) {
+            if (row === toRow && col === toCol) continue; // Same square
+
+            let canMove = false;
+
+            if (isPawn(piece)) {
+              canMove = canPawnMove(row, col, toRow, toCol);
+            } else if (isRook(piece)) {
+              canMove = canRookMove(row, col, toRow, toCol);
+            } else if (isBishop(piece)) {
+              canMove = canBishopMove(row, col, toRow, toCol);
+            } else if (isQueen(piece)) {
+              canMove = canQueenMove(row, col, toRow, toCol);
+            } else if (isKing(piece)) {
+              canMove = canKingMove(row, col, toRow, toCol);
+            } else if (isKnight(piece)) {
+              canMove = canKnightMove(row, col, toRow, toCol);
+            }
+
+            if (canMove) {
+              // Simulate the move
+              const originalTarget = boardSetup[toRow][toCol];
+              boardSetup[toRow][toCol] = piece;
+              boardSetup[row][col] = "";
+
+              // Check if king is still in check
+              const inCheck = isKingInCheck(isWhite);
+
+              // Revert the move
+              boardSetup[row][col] = piece;
+              boardSetup[toRow][toCol] = originalTarget;
+
+              if (!inCheck) {
+                return false; // Found a valid move to escape check
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return true; // No valid moves found, checkmate
+}
+
 function isKingInCheck(isWhite) {
   // Find the king's position
   const kingPiece = isWhite ? "K" : "k";
@@ -373,6 +432,12 @@ function handleClickSquare(row, col) {
       console.log("Move would put own king in check!");
 
       return; // Invalid move
+    }
+
+    if (isCheckmate(!isWhiteTurn)) {
+      gameOver = true;
+      winner = isWhiteTurn ? "White" : "Black";
+      console.log(`Checkmate! ${winner} wins!`);
     }
 
     // Switch turn

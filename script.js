@@ -18,6 +18,7 @@ const isPawn = (piece) => piece.toLowerCase() === "p";
 const isRook = (piece) => piece.toLowerCase() === "r";
 const isBishop = (piece) => piece.toLowerCase() === "b";
 const isKing = (piece) => piece.toLowerCase() === "k";
+const isQueen = (piece) => piece.toLowerCase() === "q";
 const isSameColor = (piece1, piece2) => {
     // Both pieces must be non-empty
     if (piece1 === "" || piece2 === "") return false;
@@ -27,6 +28,27 @@ const isSameColor = (piece1, piece2) => {
 const isUpper = (char) => char === char.toUpperCase();
 const isLower = (char) => char === char.toLowerCase();
 const isWhite = (piece) => piece === piece.toUpperCase();
+
+function checkIfPathClear(fromRow, fromCol, toRow, toCol) {
+  // Determine the direction of movement
+  const rowStep = toRow > fromRow ? 1 : toRow < fromRow ? -1 : 0;
+  const colStep = toCol > fromCol ? 1 : toCol < fromCol ? -1 : 0;
+
+  let currentRow = fromRow + rowStep;
+  let currentCol = fromCol + colStep;
+
+  // Check each square along the path
+  while (currentRow !== toRow || currentCol !== toCol) {
+    if (!isEmpty(currentRow, currentCol)) {
+      return false; // Path is blocked
+    }
+
+    currentRow += rowStep;
+    currentCol += colStep;
+  }
+
+  return true; // Path is clear
+}
 
 function canPawnMove(fromRow, fromCol, toRow, toCol) {
     const piece = boardSetup[fromRow][fromCol];
@@ -85,24 +107,8 @@ function canRookMove(fromRow, fromCol, toRow, toCol) {
   }
 
   // Check if path is clear
-  // Horizontal movement
-  if (fromRow === toRow) {
-    const step = fromCol < toCol ? 1 : -1;
-    for (let col = fromCol + step; col !== toCol; col += step) {
-      if (!isEmpty(fromRow, col)) {
-        return false; // Path blocked
-      }
-    }
-  }
-
-  // Vertical movement
-  if (fromCol === toCol) {
-    const step = fromRow < toRow ? 1 : -1;
-    for (let row = fromRow + step; row !== toRow; row += step) {
-      if (!isEmpty(row, fromCol)) {
-        return false; // Path blocked
-      }
-    }
+  if (!checkIfPathClear(fromRow, fromCol, toRow, toCol)) {
+    return false; // Path is blocked
   }
 
   // Check destination square
@@ -129,21 +135,8 @@ function canBishopMove(fromRow, fromCol, toRow, toCol) {
   }
 
   // Check if path is clear
-  // Determine the direction of movement
-  const rowStep = toRow > fromRow ? 1 : -1;
-  const colStep = toCol > fromCol ? 1 : -1;
-
-  let currentRow = fromRow + rowStep;
-  let currentCol = fromCol + colStep;
-
-  // Check each square along the path
-  while (currentRow !== toRow && currentCol !== toCol) {
-    if (!isEmpty(currentRow, currentCol)) {
-      return false; // Path is blocked
-    }
-
-    currentRow += rowStep;
-    currentCol += colStep;
+  if (!checkIfPathClear(fromRow, fromCol, toRow, toCol)) {
+    return false; // Path is blocked
   }
 
   // Check destination square
@@ -178,6 +171,36 @@ function canKingMove(fromRow, fromCol, toRow, toCol) {
   }
 
   return false; // Invalid move
+}
+
+function canQueenMove(fromRow, fromCol, toRow, toCol) {
+  // Queen moves like both rook and bishop
+  // Check if piece selected is a queen
+  const piece = boardSetup[fromRow][fromCol];
+
+  if (!isQueen(piece)) return false;
+
+  // Check if moving horizontally, vertically, or diagonally
+  const rowDiff = Math.abs(toRow - fromRow);
+  const colDiff = Math.abs(toCol - fromCol);
+
+  if (fromRow !== toRow && fromCol !== toCol && rowDiff !== colDiff) {
+    return false; // Not moving in straight line or diagonally
+  }
+
+  // Check if path is clear
+  if (!checkIfPathClear(fromRow, fromCol, toRow, toCol)) {
+    return false; // Path is blocked
+  }
+
+  // Check destination square
+  const target = boardSetup[toRow][toCol];
+
+  if (target !== "" && isSameColor(piece, target)) {
+    return false; // Cannot capture own piece
+  }
+  
+  return true; // Valid move
 }
 
 function getPieceAt(row, col) {
@@ -234,10 +257,19 @@ function handleClickSquare(row, col) {
           console.log("Invalid bishop move");
           return; // Invalid bishop move
       }
-    } else if (isKing(movingPiece)) {
+    }
+    // Validate move if king
+    else if (isKing(movingPiece)) {
       if (!canKingMove(from.row, from.col, row, col)) {
           console.log("Invalid king move");
           return; // Invalid king move
+      }
+    }
+    // Validate move if queen
+    else if (isQueen(movingPiece)) {
+      if (!canQueenMove(from.row, from.col, row, col)) {
+          console.log("Invalid queen move");
+          return; // Invalid queen move
       }
     }
 

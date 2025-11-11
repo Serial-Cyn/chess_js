@@ -19,6 +19,7 @@ const isRook = (piece) => piece.toLowerCase() === "r";
 const isBishop = (piece) => piece.toLowerCase() === "b";
 const isKing = (piece) => piece.toLowerCase() === "k";
 const isQueen = (piece) => piece.toLowerCase() === "q";
+const isKnight = (piece) => piece.toLowerCase() === "n";
 const isSameColor = (piece1, piece2) => {
     // Both pieces must be non-empty
     if (piece1 === "" || piece2 === "") return false;
@@ -174,7 +175,6 @@ function canKingMove(fromRow, fromCol, toRow, toCol) {
 }
 
 function canQueenMove(fromRow, fromCol, toRow, toCol) {
-  // Queen moves like both rook and bishop
   // Check if piece selected is a queen
   const piece = boardSetup[fromRow][fromCol];
 
@@ -201,6 +201,34 @@ function canQueenMove(fromRow, fromCol, toRow, toCol) {
   }
   
   return true; // Valid move
+}
+
+function canKnightMove(fromRow, fromCol, toRow, toCol) {
+  // Check if piece selected is a knight
+  const piece = boardSetup[fromRow][fromCol];
+
+  if (!isKnight(piece)) return false;
+
+  // Check if the move follows the "L" shape pattern
+  // A knight moves two squares in one direction and one square perpendicular
+  const rowDiff = Math.abs(toRow - fromRow);
+  const colDiff = Math.abs(toCol - fromCol);
+
+  if (
+    (rowDiff === 2 && colDiff === 1) ||
+    (rowDiff === 1 && colDiff === 2)
+  ) {
+    // Check destination square
+    const target = boardSetup[toRow][toCol];
+
+    if (target !== "" && isSameColor(piece, target)) {
+      return false; // Cannot capture own piece
+    }
+
+    return true; // Valid move
+  }
+
+  return false; // Invalid move
 }
 
 function getPieceAt(row, col) {
@@ -270,6 +298,11 @@ function handleClickSquare(row, col) {
       if (!canQueenMove(from.row, from.col, row, col)) {
           console.log("Invalid queen move");
           return; // Invalid queen move
+      }
+    } else if (isKnight(movingPiece)) {
+      if (!canKnightMove(from.row, from.col, row, col)) {
+          console.log("Invalid knight move");
+          return; // Invalid knight move
       }
     }
 

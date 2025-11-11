@@ -17,6 +17,7 @@ const isEmpty = (row, column) => boardSetup[row][column] === "";
 const isPawn = (piece) => piece.toLowerCase() === "p";
 const isRook = (piece) => piece.toLowerCase() === "r";
 const isBishop = (piece) => piece.toLowerCase() === "b";
+const isKing = (piece) => piece.toLowerCase() === "k";
 const isSameColor = (piece1, piece2) => {
     // Both pieces must be non-empty
     if (piece1 === "" || piece2 === "") return false;
@@ -155,6 +156,30 @@ function canBishopMove(fromRow, fromCol, toRow, toCol) {
   return true; // Valid move
 }
 
+function canKingMove(fromRow, fromCol, toRow, toCol) {
+  // Check if piece selected is a king
+  const piece = boardSetup[fromRow][fromCol];
+
+  if (!isKing(piece)) return false;
+
+  // Check if the move is within one square by comparing the absolute differences
+  const rowDiff = Math.abs(toRow - fromRow);
+  const colDiff = Math.abs(toCol - fromCol);
+
+  if (rowDiff <= 1 && colDiff <= 1) {
+    // Check destination square
+    const target = boardSetup[toRow][toCol];
+
+    if (target !== "" && isSameColor(piece, target)) {
+      return false; // Cannot capture own piece
+    }
+
+    return true; // Valid move
+  }
+
+  return false; // Invalid move
+}
+
 function getPieceAt(row, col) {
   selectedPiece = { row, col };
   highlightSquare(row, col);
@@ -208,6 +233,11 @@ function handleClickSquare(row, col) {
       if (!canBishopMove(from.row, from.col, row, col)) {
           console.log("Invalid bishop move");
           return; // Invalid bishop move
+      }
+    } else if (isKing(movingPiece)) {
+      if (!canKingMove(from.row, from.col, row, col)) {
+          console.log("Invalid king move");
+          return; // Invalid king move
       }
     }
 

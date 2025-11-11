@@ -16,6 +16,7 @@ let selectedPiece = null;
 const isEmpty = (row, column) => boardSetup[row][column] === "";
 const isPawn = (piece) => piece.toLowerCase() === "p";
 const isRook = (piece) => piece.toLowerCase() === "r";
+const isBishop = (piece) => piece.toLowerCase() === "b";
 const isSameColor = (piece1, piece2) => {
     // Both pieces must be non-empty
     if (piece1 === "" || piece2 === "") return false;
@@ -73,18 +74,10 @@ function canPawnMove(fromRow, fromCol, toRow, toCol) {
 }
 
 function canRookMove(fromRow, fromCol, toRow, toCol) {
-  // Rook moves in straight lines: same row or same column
   // Check if piece selected is a rook
   const piece = boardSetup[fromRow][fromCol];
 
   if (!isRook(piece)) return false;
-
-  // Check if moving in the same row or column
-  // If not, invalid move
-  // Check if path is clear
-  // If not, check if opponent piece at destination
-  // If same color piece at destination, invalid move
-  // Otherwise, valid move
 
   if (fromRow !== toRow && fromCol !== toCol) {
     return false; // Not moving in straight line
@@ -113,6 +106,48 @@ function canRookMove(fromRow, fromCol, toRow, toCol) {
 
   // Check destination square
   const target = boardSetup[toRow][toCol];
+  if (target !== "" && isSameColor(piece, target)) {
+    return false; // Cannot capture own piece
+  }
+
+  return true; // Valid move
+}
+
+function canBishopMove(fromRow, fromCol, toRow, toCol) {
+  // Check if piece selected is a bishop
+  const piece = boardSetup[fromRow][fromCol];
+
+  if (!isBishop(piece)) return false;
+
+  // When moving diagonally, the absolute difference between row and column changes must be equal
+  const rowDiff = Math.abs(toRow - fromRow);
+  const colDiff = Math.abs(toCol - fromCol);
+
+  if (rowDiff !== colDiff) {
+    return false; // Not moving diagonally
+  }
+
+  // Check if path is clear
+  // Determine the direction of movement
+  const rowStep = toRow > fromRow ? 1 : -1;
+  const colStep = toCol > fromCol ? 1 : -1;
+
+  let currentRow = fromRow + rowStep;
+  let currentCol = fromCol + colStep;
+
+  // Check each square along the path
+  while (currentRow !== toRow && currentCol !== toCol) {
+    if (!isEmpty(currentRow, currentCol)) {
+      return false; // Path is blocked
+    }
+
+    currentRow += rowStep;
+    currentCol += colStep;
+  }
+
+  // Check destination square
+  const target = boardSetup[toRow][toCol];
+
   if (target !== "" && isSameColor(piece, target)) {
     return false; // Cannot capture own piece
   }
@@ -161,13 +196,19 @@ function handleClickSquare(row, col) {
             return; // Invalid pawn move
         }
     }
-
     // Validate move if rook
-    if (isRook(movingPiece)) {
+    else if (isRook(movingPiece)) {
         if (!canRookMove(from.row, from.col, row, col)) {
             console.log("Invalid rook move");
             return; // Invalid rook move
         }
+    }
+    // Validate move if bishop
+    else if (isBishop(movingPiece)) {
+      if (!canBishopMove(from.row, from.col, row, col)) {
+          console.log("Invalid bishop move");
+          return; // Invalid bishop move
+      }
     }
 
     // Perform move

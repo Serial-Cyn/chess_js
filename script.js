@@ -231,6 +231,60 @@ function canKnightMove(fromRow, fromCol, toRow, toCol) {
   return false; // Invalid move
 }
 
+function isKingInCheck(isWhite) {
+  // Find the king's position
+  const kingPiece = isWhite ? "K" : "k";
+  let kingPosition = null;
+
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      if (boardSetup[row][col] === kingPiece) {
+        kingPosition = { row, col };
+
+        break;
+      }
+    }
+  }
+
+  if (!kingPosition) {
+    console.log("King not found on the board!");
+
+    return false; // King not found
+  }
+
+  // Check if any opponent piece can attack the king
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const piece = boardSetup[row][col];
+
+      if (piece === "") continue; // Empty square
+
+      // Check only opponent pieces
+      if (isWhite && isLower(piece) || !isWhite && isUpper(piece)) {
+        let canAttack = false;
+
+        if (isPawn(piece)) {
+          canAttack = canPawnMove(row, col, kingPosition.row, kingPosition.col);
+        } else if (isRook(piece)) {
+          canAttack = canRookMove(row, col, kingPosition.row, kingPosition.col);
+        } else if (isBishop(piece)) {
+          canAttack = canBishopMove(row, col, kingPosition.row, kingPosition.col);
+        } else if (isQueen(piece)) {
+          canAttack = canQueenMove(row, col, kingPosition.row, kingPosition.col);
+        } else if (isKing(piece)) {
+          canAttack = canKingMove(row, col, kingPosition.row, kingPosition.col);
+        } else if (isKnight(piece)) {
+          canAttack = canKnightMove(row, col, kingPosition.row, kingPosition.col);
+        }
+
+        if (canAttack) {
+          return true; // King is in check
+        }
+      }
+    }
+  }
+}
+
 function getPieceAt(row, col) {
   selectedPiece = { row, col };
   highlightSquare(row, col);
@@ -306,9 +360,20 @@ function handleClickSquare(row, col) {
       }
     }
 
-    // Perform move
+    // Check if move puts own king in check
+    const originalTarget = boardSetup[row][col];
     boardSetup[row][col] = movingPiece;
     boardSetup[from.row][from.col] = "";
+
+    if (isKingInCheck(isWhiteTurn)) {
+      // Revert move
+      boardSetup[from.row][from.col] = movingPiece;
+      boardSetup[row][col] = originalTarget;
+
+      console.log("Move would put own king in check!");
+
+      return; // Invalid move
+    }
 
     // Switch turn
     isWhiteTurn = !isWhiteTurn;
